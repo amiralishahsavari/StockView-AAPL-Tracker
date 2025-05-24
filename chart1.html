@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نمودار قیمت سهام AAPL</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --secondary-color: #1e40af;
+      --accent-color: #3b82f6;
+      --text-color: #1f2937;
+      --light-bg: #f9fafb;
+      --dark-bg: #1f2937;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background-color: var(--light-bg);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Header Styles - Updated to match dashboard */
+    header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 1rem 0;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo i {
+      color: #fbbf24;
+    }
+
+    .menu-toggle {
+      display: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: white;
+    }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 2rem;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+    }
+
+    nav a:hover,
+    nav a.active {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    @media (max-width: 768px) {
+
+      .header-content {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .logo {
+        font-size: 1.2rem;
+      }
+
+      .menu-toggle {
+        display: block;
+        order: -1;
+      }
+
+      nav ul {
+        display: none;
+        flex-direction: column;
+        background-color: var(--primary-color);
+        padding: 1rem;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        width: 100%;
+      }
+
+      nav ul.show {
+        display: flex;
+      }
+
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+
+      .table-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .table-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+    }
+
+    /* Page Title */
+    .page-title {
+      text-align: center;
+      margin: 2rem 0;
+      color: var(--secondary-color);
+      position: relative;
+      padding-bottom: 1rem;
+    }
+
+    .page-title::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+      border-radius: 2px;
+    }
+
+    /* Chart Section */
+    .chart-section {
+      background-color: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--secondary-color);
+    }
+
+    .chart-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .chart-btn {
+      background-color: var(--light-bg);
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'Vazirmatn', sans-serif;
+    }
+
+    .chart-btn:hover {
+      background-color: var(--accent-color);
+      color: white;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 70vh;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      /* مرکز افقی */
+      align-items: center;
+    }
+
+    /* Description Section */
+    .description {
+      background-color: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .description h3 {
+      color: var(--secondary-color);
+      margin-bottom: 1rem;
+      font-size: 1.25rem;
+    }
+
+    .description p {
+      margin-bottom: 1rem;
+      text-align: justify;
+      line-height: 1.8;
+    }
+
+    /* Key Metrics */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .metric-card {
+      background-color: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin: 0.5rem 0;
+    }
+
+    .metric-label {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+
+    /* Footer */
+    footer {
+      background-color: var(--dark-bg);
+      color: white;
+      padding: 2rem 0;
+      margin-top: 3rem;
+    }
+
+    .copyright {
+      text-align: center;
+      padding-top: 2rem;
+      margin-top: 2rem;
+      border-top: 1px solid #374151;
+      font-size: 0.875rem;
+      color: #9ca3af;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+
+      .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .chart-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .chart-container {
+        height: 50vh;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .chart-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .chart-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    footer {
+      background-color: var(--dark-bg);
+      color: white;
+      padding: 2rem 0;
+      margin-top: 3rem;
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+    }
+
+    .footer-section h3 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      position: relative;
+      padding-bottom: 0.5rem;
+    }
+
+    .footer-section h3::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 50px;
+      height: 2px;
+      background-color: var(--accent-color);
+    }
+
+    .footer-links {
+      list-style: none;
+    }
+
+    .footer-links li {
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-links a {
+      color: #d1d5db;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .footer-links a:hover {
+      color: white;
+      padding-right: 5px;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .social-links a {
+      color: white;
+      background-color: #374151;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .social-links a:hover {
+      background-color: var(--accent-color);
+      transform: translateY(-3px);
+    }
+
+    .copyright {
+      text-align: center;
+      padding-top: 2rem;
+      margin-top: 2rem;
+      border-top: 1px solid #374151;
+      font-size: 0.875rem;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="container header-content">
+      <div class="logo">
+        <i class="fas fa-chart-line"></i>
+        <span>سامانه تحلیل سهام</span>
+      </div>
+      <nav>
+        <div class="menu-toggle">
+          <i class="fas fa-bars"></i>
+        </div>
+        <ul id="nav-menu">
+          <li><a href="dashbord.html">داشبورد</a></li>
+          <li><a href="table.html">جدول داده‌ها</a></li>
+          <li><a href="chart1.html" class="active">نمودار قیمت</a></li>
+          <li><a href="chart2.html">نمودار حجم</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1 class="page-title">نمودار قیمت بسته شدن سهام AAPL</h1>
+
+    <div class="metrics">
+      <div class="metric-card">
+        <div class="metric-label">آخرین قیمت</div>
+        <div class="metric-value" id="lastPrice">-</div>
+        <div class="metric-label">دلار آمریکا</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">تغییرات روزانه</div>
+        <div class="metric-value" id="dailyChange">-</div>
+        <div class="metric-label">درصد</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">بیشترین قیمت</div>
+        <div class="metric-value" id="highPrice">-</div>
+        <div class="metric-label">در 30 روز گذشته</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">کمترین قیمت</div>
+        <div class="metric-value" id="lowPrice">-</div>
+        <div class="metric-label">در 30 روز گذشته</div>
+      </div>
+    </div>
+
+    <section class="chart-section">
+      <div class="chart-header">
+        <h2 class="section-title">روند قیمت بسته شدن سهام</h2>
+        <div class="chart-actions">
+          <button class="chart-btn">
+            <i class="fas fa-download"></i>
+            دانلود نمودار
+          </button>
+          <button class="chart-btn">
+            <i class="fas fa-cog"></i>
+            تنظیمات
+          </button>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="priceChart"></canvas>
+      </div>
+    </section>
+
+    <section class="description">
+      <h3>تحلیل قیمت سهام AAPL</h3>
+      <p>نمودار فوق روند قیمت بسته شدن سهام شرکت اپل (AAPL) را در 30 روز معاملاتی گذشته نمایش می‌دهد. قیمت بسته شدن سهام
+        یکی از مهم‌ترین شاخص‌ها در تحلیل تکنیکال محسوب می‌شود، چرا که نشان‌دهنده توافق نهایی خریداران و فروشندگان در
+        پایان روز معاملاتی است.</p>
+      <p>تحلیلگران از این داده‌ها برای شناسایی روندها، سطوح حمایت و مقاومت و الگوهای قیمتی استفاده می‌کنند. روند صعودی
+        در این نمودار می‌تواند نشان‌دهنده افزایش تقاضا برای سهام شرکت باشد، در حالی که روند نزولی ممکن است حاکی از کاهش
+        اعتماد سرمایه‌گذاران به آینده شرکت یا شرایط کلی بازار باشد.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>درباره ما</h3>
+          <p>سامانه تحلیل سهام با هدف ارائه ابزارهای تحلیلی پیشرفته برای سرمایه‌گذاران ایجاد شده است.</p>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-telegram"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-linkedin"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h3>لینک‌های مفید</h3>
+          <ul class="footer-links">
+            <li><a href="#">آموزش تحلیل تکنیکال</a></li>
+            <li><a href="#">اخبار بازار</a></li>
+            <li><a href="#">تحلیل‌های روزانه</a></li>
+            <li><a href="#">سوالات متداول</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>تماس با ما</h3>
+          <p><i class="fas fa-map-marker-alt"></i> تهران، خیابان ولیعصر، پلاک ۱۰۰</p>
+          <p><i class="fas fa-phone"></i> ۰۲۱-۱۲۳۴۵۶۷</p>
+          <p><i class="fas fa-envelope"></i> info@stockanalysis.ir</p>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>تمامی حقوق این وبسایت محفوظ است &copy; ۱۴۰۲ سامانه تحلیل سهام</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const toggle = document.querySelector(".menu-toggle");
+      const menu = document.getElementById("nav-menu");
+      if (toggle && menu) {
+        toggle.addEventListener("click", function () {
+          menu.classList.toggle("show");
+        });
+      }
+    });
+  </script>
+  <script src="app.js"></script>
+</body>
+
+</html>
